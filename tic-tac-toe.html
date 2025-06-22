@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tic Tac Toe with Center Popup & Party Popper</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 40px 20px;
+      user-select: none;
+      overflow-x: hidden;
+    }
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 30px;
+      text-shadow: 2px 2px 6px rgba(0,0,0,0.4);
+    }
+    #start-screen {
+      background: rgba(255,255,255,0.1);
+      padding: 25px 40px;
+      border-radius: 15px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    #start-screen label {
+      display: block;
+      margin: 15px 0 5px;
+      font-size: 1.1rem;
+    }
+    #start-screen input {
+      padding: 10px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: none;
+      width: 220px;
+      text-align: center;
+    }
+    #startBtn {
+      margin-top: 25px;
+      padding: 12px 40px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 40px;
+      background: #ff6f91;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 111, 145, 0.6);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    #startBtn:hover {
+      background: #ff4b6e;
+      box-shadow: 0 8px 25px rgba(255, 75, 110, 0.8);
+    }
+    #board {
+      display: none;
+      grid-template-columns: repeat(3, 120px);
+      grid-gap: 15px;
+      margin-bottom: 20px;
+    }
+    #board.active {
+      display: grid;
+    }
+    .cell {
+      width: 120px;
+      height: 120px;
+      background: #fff;
+      border-radius: 20px;
+      box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+      font-size: 72px;
+      color: #764ba2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.2s;
+    }
+    .cell:hover {
+      background: #f1e6ff;
+      transform: scale(1.05);
+    }
+    #message {
+      font-size: 1.5rem;
+      min-height: 40px;
+      margin-bottom: 15px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+      color: #fff;
+    }
+    #resetBtn {
+      display: none;
+      padding: 12px 30px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 40px;
+      background: #ff6f91;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 111, 145, 0.6);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    #resetBtn:hover {
+      background: #ff4b6e;
+      box-shadow: 0 8px 25px rgba(255, 75, 110, 0.8);
+    }
+    .winner {
+      animation: winnerGlow 1.2s infinite alternate;
+    }
+    @keyframes winnerGlow {
+      from {
+        box-shadow: 0 0 15px #ff4b6e;
+      }
+      to {
+        box-shadow: 0 0 35px #ff6f91;
+      }
+    }
+
+    /* Modal styles */
+    #popup-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #764ba2;
+      border-radius: 20px;
+      padding: 40px 60px;
+      box-shadow: 0 0 30px rgba(0,0,0,0.8);
+      text-align: center;
+      z-index: 10001;
+      color: white;
+      font-size: 1.8rem;
+      user-select: none;
+    }
+    #popup-modal button {
+      margin-top: 25px;
+      padding: 12px 40px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 40px;
+      background: #ff6f91;
+      color: white;
+      cursor: pointer;
+      box-shadow: 0 5px 15px rgba(255, 111, 145, 0.6);
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+    #popup-modal button:hover {
+      background: #ff4b6e;
+      box-shadow: 0 8px 25px rgba(255, 75, 110, 0.8);
+    }
+
+    /* Overlay */
+    #modal-overlay {
+      display: none;
+      position: fixed;
+      top:0; left:0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.7);
+      z-index: 10000;
+    }
+
+    /* Confetti container */
+    #confetti-container {
+      pointer-events: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: visible;
+      z-index: 9999;
+    }
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background-color: #ff4b6e;
+      opacity: 0.9;
+      transform-origin: center;
+      animation-name: confetti-fall, confetti-spin;
+      animation-timing-function: linear, ease-in-out;
+      animation-iteration-count: infinite, infinite;
+      border-radius: 3px;
+    }
+    @keyframes confetti-fall {
+      0% { transform: translateY(0); opacity: 1; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+    @keyframes confetti-spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<h1>Tic Tac Toe</h1>
+
+<div id="start-screen">
+  <label for="player1">Player 1 Name (X):</label>
+  <input type="text" id="player1" placeholder="Enter name" required />
+  
+  <label for="player2">Player 2 Name (O):</label>
+  <input type="text" id="player2" placeholder="Enter name" required />
+  
+  <button id="startBtn">Start Game</button>
+</div>
+
+<div id="board">
+  <div class="cell" data-index="0"></div>
+  <div class="cell" data-index="1"></div>
+  <div class="cell" data-index="2"></div>
+  <div class="cell" data-index="3"></div>
+  <div class="cell" data-index="4"></div>
+  <div class="cell" data-index="5"></div>
+  <div class="cell" data-index="6"></div>
+  <div class="cell" data-index="7"></div>
+  <div class="cell" data-index="8"></div>
+</div>
+
+<div id="message"></div>
+<button id="resetBtn">Restart Game</button>
+
+<!-- Modal and overlay -->
+<div id="modal-overlay"></div>
+<div id="popup-modal">
+  <div id="popup-message"></div>
+  <button id="closePopupBtn">Close</button>
+</div>
+
+<div id="confetti-container"></div>
+
+<script>
+  const startScreen = document.getElementById('start-screen');
+  const startBtn = document.getElementById('startBtn');
+  const player1Input = document.getElementById('player1');
+  const player2Input = document.getElementById('player2');
+
+  const board = document.getElementById('board');
+  const cells = document.querySelectorAll('.cell');
+  const message = document.getElementById('message');
+  const resetBtn = document.getElementById('resetBtn');
+
+  const modal = document.getElementById('popup-modal');
+  const modalOverlay = document.getElementById('modal-overlay');
+  const popupMessage = document.getElementById('popup-message');
+  const closePopupBtn = document.getElementById('closePopupBtn');
+
+  const confettiContainer = document.getElementById('confetti-container');
+
+  let boardState = Array(9).fill('');
+  let currentPlayer = 'X';
+  let gameActive = false;
+  let playerNames = { X: '', O: '' };
+  let winningCells = [];
+
+  const winningConditions = [
+    [0,1,2],[3,4,5],[6,7,8], // rows
+    [0,3,6],[1,4,7],[2,5,8], // cols
+    [0,4,8],[2,4,6]          // diagonals
+  ];
+
+  function startGame() {
+    const p1 = player1Input.value.trim();
+    const p2 = player2Input.value.trim();
+
+    if(!p1 || !p2) {
+      alert("Please enter names for both players.");
+      return;
+    }
+
+    playerNames.X = p1;
+    playerNames.O = p2;
+    currentPlayer = 'X';
+    boardState.fill('');
+    winningCells = [];
+    gameActive = true;
+
+    cells.forEach(cell => {
+      cell.textContent = '';
+      cell.classList.remove('winner');
+    });
+
+    message.textContent = `${playerNames[currentPlayer]}'s (${currentPlayer}) turn`;
+
+    startScreen.style.display = 'none';
+    board.classList.add('active');
+    resetBtn.style.display = 'inline-block';
+  }
+
+  function handleCellClick(e) {
+    if(!gameActive) return;
+
+    const index = e.target.getAttribute('data-index');
+    if(boardState[index] !== '') return;
+
+    boardState[index] = currentPlayer;
+    e.target.textContent = currentPlayer;
+
+    if(checkWin()) {
+      message.textContent = `${playerNames[currentPlayer]} (${currentPlayer}) wins! 🎉`;
+      highlightWinnerCells();
+      gameActive = false;
+      showConfetti();
+      showPopup(`${playerNames[currentPlayer]} wins! Congratulations! 🎉`);
+      return;
+    }
+
+    if(boardState.every(cell => cell !== '')) {
+      message.textContent = "It's a draw!";
+      gameActive = false;
+      showPopup("It's a draw! Try again.");
+      return;
+    }
+
+    currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+    message.textContent = `${playerNames[currentPlayer]}'s (${currentPlayer}) turn`;
+  }
+
+  function checkWin() {
+    return winningConditions.some(condition => {
+      const [a,b,c] = condition;
+      if(
+        boardState[a] === currentPlayer &&
+        boardState[b] === currentPlayer &&
+        boardState[c] === currentPlayer
+      ) {
+        winningCells = condition;
+        return true;
+      }
+      return false;
+    });
+  }
+
+  function highlightWinnerCells() {
+    winningCells.forEach(i => {
+      cells[i].classList.add('winner');
+    });
+  }
+
+  function resetGame() {
+    stopConfetti();
+    hidePopup();
+    startScreen.style.display = 'block';
+    board.classList.remove('active');
+    resetBtn.style.display = 'none';
+    message.textContent = '';
+    player1Input.value = '';
+    player2Input.value = '';
+    gameActive = false;
+    boardState.fill('');
+    cells.forEach(cell => {
+      cell.textContent = '';
+      cell.classList.remove('winner');
+    });
+  }
+
+  // Modal popup functions
+  function showPopup(text) {
+    popupMessage.textContent = text;
+    modal.style.display = 'block';
+    modalOverlay.style.display = 'block';
+  }
+  function hidePopup() {
+    modal.style.display = 'none';
+    modalOverlay.style.display = 'none';
+  }
+
+  closePopupBtn.addEventListener('click', () => {
+    hidePopup();
+    resetGame();
+  });
+
+  // Confetti animation
+  function showConfetti() {
+    const colors = ['#ff4b6e','#ff6f91','#ff9a9e','#ffb3c6','#ff7c9c'];
+    const count = 80;
+
+    for(let i=0; i<count; i++) {
+      const confetti = document.createElement('div');
+      confetti.classList.add('confetti');
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.left = Math.random() * window.innerWidth + 'px';
+      confetti.style.animationDuration = (Math.random() * 3 + 2) + 's';
+      confetti.style.width = confetti.style.height = (Math.random() * 8 + 5) + 'px';
+      confetti.style.opacity = Math.random();
+      confetti.style.top = '-10px';
+      confetti.style.animationName = 'confetti-fall, confetti-spin';
+      confetti.style.animationIterationCount = '1, infinite';
+      confettiContainer.appendChild(confetti);
+
+      // Remove confetti after animation
+      confetti.addEventListener('animationend', () => {
+        confetti.remove();
+      });
+    }
+  }
+
+  function stopConfetti() {
+    confettiContainer.innerHTML = '';
+  }
+
+  startBtn.addEventListener('click', startGame);
+  cells.forEach(cell => cell.addEventListener('click', handleCellClick));
+  resetBtn.addEventListener('click', resetGame);
+</script>
+
+</body>
+</html>
